@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: postgres:17.5-alpine3.22@sha256:6567bca8d7bc8c82c5922425a0baee57be8402df92bae5eacad5f01ae9544daa
+    environment:
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD:?}
+      - POSTGRES_USER=${DATABASE_USER:?}
+      - POSTGRES_DB=${DATABASE_NAME:?}
+    ports:
+      - "${DATABASE_PORT:?}:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:?} -d ${DATABASE_NAME:?}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Optional: Add pgAdmin for database management
+  pgadmin:
+    image: dpage/pgadmin4:9.6.0@sha256:2c7d73e13bd6c30b1d53e4c25d0d6d81adbd0799c4f4d6a09efc5d68fca5d16d
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL:?}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD:?}
+      - PGADMIN_SERVER_JSON_FILE=/pgadmin4/servers.json
+    ports:
+      - "${PGADMIN_PORT:?}:80"
+    volumes:
+      - ./data/pgadmin:/var/lib/pgadmin
+      - ./data/pgadmin-servers.json:/pgadmin4/servers.json
+    depends_on:
+      - postgres 
